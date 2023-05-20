@@ -23,4 +23,5 @@ public class AddPorderDTO {
     @Size(min=15, message="地址長度不足")
     private String readdress;
     private List<OrderProductDTO> orderProducts;
+    private String paymenttype;
 }

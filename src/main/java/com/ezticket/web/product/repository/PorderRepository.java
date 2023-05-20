@@ -13,7 +13,7 @@ public interface PorderRepository extends JpaRepository<Porder, Integer> {
 
     @Query("FROM Porder WHERE memberno = :id OR porderno = :id")
     List<Porder> findByID(@Param("id") Integer id);
-
+    Porder findByPaymenttransactionid(String paymenttransactionid);
     Porder findByPorderno(Integer id);
 }
 

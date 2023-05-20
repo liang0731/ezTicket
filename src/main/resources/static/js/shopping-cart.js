@@ -270,7 +270,9 @@ function addPorder() {
     'rephone': $("#rephone").val(),
     'readdress': ($("#readdress1").val() + $("#readdress2").val() + $("#readdress3").val() + $("#readdress4").val()),
     'orderProducts': products,
+    'paymenttype': $('[name="paymentMethod"]:checked').val(),
   }
+  console.log(porderbody);
   swal({
     title: "是否建立訂單?",
     icon: "warning",
@@ -286,12 +288,17 @@ function addPorder() {
         async: false,
         success: function(data) {
           localStorage.clear();
-          swal("訂單建立成功，等待前往綠界金流付款", {
+          swal("訂單建立成功，等待前往第三方支付付款", {
             icon: "success",
             buttons: false,
             timer: 3000,
           });
-          $('body').append(data);
+          console.log(data);
+          if (porderbody.paymenttype !== "Ecpay") {
+            window.location = data;
+          } else {
+            $('body').append(data);
+          }
         },
         error: function() {
           swal({
