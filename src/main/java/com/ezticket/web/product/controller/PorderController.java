@@ -45,22 +45,15 @@ public class PorderController {
         porderService.updateByID(ps.getPorderno(), ps.getPprocessstatus());
         return true;
     }
-//    @PostMapping("/add")
-//    @ResponseBody
-//    public Integer addPorder(@RequestBody AddPorderDTO addPorderDTO){
-//        return porderService.addPorder(addPorderDTO).getPorderno();
-//    }
+
     @PostMapping("/add")
     @ResponseBody
     public String addPorder(@RequestBody AddPorderDTO addPorderDTO) throws IOException {
         String paytype = addPorderDTO.getPaymenttype();
         if (paytype.equalsIgnoreCase("Ecpay")){
             return orderService.ecpayCheckout(porderService.addPorder(addPorderDTO).getPorderno());
-        }
-        else if (paytype.equalsIgnoreCase("Fonpay_Newebpay")) {
-            return fonPayService.fonpayCheckout(porderService.addPorder(addPorderDTO).getPorderno());
         } else {
-            return null;
+            return fonPayService.fonpayCheckout(porderService.addPorder(addPorderDTO).getPorderno(),paytype);
         }
     }
 }

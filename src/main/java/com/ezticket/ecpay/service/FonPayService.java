@@ -32,17 +32,24 @@ public class FonPayService {
     @Autowired
     private ProductDAO productRepository;
 
-    static String FONPAY_API_KEY = "279152534347";
-    static String FONPAY_API_SECRET = "40uku10lpcfMSFjmbKD5";
-    static String FONPAY_API_MERCHANT_CODE = "ME18315275";
+    static String FONPAY_API_KEY = "593833005619";
+    static String FONPAY_API_SECRET = "Ln95pHin6gFE2ev3qXff";
+    static String FONPAY_API_KEY_LINE = "852689534957";
+    static String FONPAY_API_SECRET_LINE = "FzGBjuHatXDjY5eHxec7";
+    static String FONPAY_API_MERCHANT_CODE = "ME10679778";
     static String PAYMENT_CREATE_ORDER = "PaymentCreateOrder";
-    public String fonpayCheckout(Integer porderno) throws IOException {
+    public String fonpayCheckout(Integer porderno, String paytype) throws IOException {
         URL url = new URL("https://test-api.fonpay.tw/api/payment/" + PAYMENT_CREATE_ORDER);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("POST");
         con.setRequestProperty("Accept", "application/json");
-        con.setRequestProperty("key", FONPAY_API_KEY);
-        con.setRequestProperty("secret", FONPAY_API_SECRET);
+        if (paytype.equalsIgnoreCase("Fonpay_Newebpay")) {
+            con.setRequestProperty("key", FONPAY_API_KEY);
+            con.setRequestProperty("secret", FONPAY_API_SECRET);
+        } else if (paytype.equalsIgnoreCase("Fonpay_Linepay")) {
+            con.setRequestProperty("key", FONPAY_API_KEY_LINE);
+            con.setRequestProperty("secret", FONPAY_API_SECRET_LINE);
+        }
         con.setRequestProperty("merchantCode", FONPAY_API_MERCHANT_CODE);
         con.setRequestProperty("Content-Type", "application/json");
         con.setRequestProperty("User-Agent", "Tibame_Student");
@@ -67,7 +74,7 @@ public class FonPayService {
         // 付款完成後，接收GET請求更新資料庫
         String local = "http://" + hostname + ":8085" + "/ecpay/paymentReturn";
         // 若有提供，系統會在訂單狀態異動時由背景呼叫,此網址通知電商，
-        String httpsUrl = "https://6bf1-2001-b011-a406-9e1a-59a9-bd18-7e2d-d643.jp.ngrok.io";
+        String httpsUrl = "https://f179-2001-b011-a406-9b56-55a6-b336-7276-92d0.jp.ngrok.io";
         String callback = httpsUrl + "/ecpay/fonpay/return";
         // 商品明細
         String itemList = "";

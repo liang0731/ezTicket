@@ -106,6 +106,8 @@ public class OrderController {
 		String paymentDate = request.getParameter("PaymentDate");
 		String porderno = request.getParameter("MerchantTradeNo").substring(15);
 		Porder porder = porderRepository.getReferenceById(Integer.valueOf(porderno));
+		// 塞入綠界編號
+		porder.setPaymenttransactionid(request.getParameter("MerchantTradeNo"));
 		// 塞入付款日期
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 		porder.setPpaydate(LocalDateTime.parse(paymentDate, formatter));
@@ -128,13 +130,16 @@ public class OrderController {
 	public String getEcpayStatus(String merchantTradeNo) {
 		return orderService.checkorder(merchantTradeNo);
 	}
+
+
 	//	========================================== FonPay ================================================
 
+	// postman測試用
 	@PostMapping("/fonpay/checkout")
-	public String fonpayCheckout(Integer porderno) throws IOException {
-		return fonPayService.fonpayCheckout(porderno);
+	public String fonpayCheckout(Integer porderno,String paytype) throws IOException {
+		return fonPayService.fonpayCheckout(porderno, paytype);
 	}
-
+	// 接收訂單異動訊息
 	@PostMapping("/fonpay/return")
 	public String fonpayReturn(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		Enumeration<String> parameterNames = request.getParameterNames();
@@ -147,17 +152,11 @@ public class OrderController {
 		// Fonpay規定如有收到回傳，回饋給他的值
 		return "SUCCESS";
 	}
+	// 付款成功接收GET參數
 	@GetMapping("/paymentReturn")
 	public ModelAndView handlePaymentReturn(@RequestParam("paymentTransactionId") String paymentTransactionId,
 											@RequestParam("status") String status,
-											@RequestParam("totalPrice") String totalPrice,
-											@RequestParam("paidDate") String paidDate,
-											@RequestParam("paidConfirmDate") String paidConfirmDate,
-											@RequestParam("creditCardNo") String creditCardNo,
-											@RequestParam("approveCode") String approveCode,
-											@RequestParam("checkCode") String checkCode,
-											@RequestParam("validation") String validation,
-											@RequestParam("errorMessage") String errorMessage) {
+											@RequestParam("paidDate") String paidDate) {
 		// 在這裡處理傳遞回來的資訊
 		// 你可以根據需要將資訊存儲到相應的變數或物件中，執行相應的業務邏輯
 		Porder porder = porderRepository.findByPaymenttransactionid(paymentTransactionId);
