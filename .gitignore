@@ -32,6 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 
+# 防止機密檔被 commit
+.env
 
 ### Spring Boot ###
 application.properties

@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class Util {
 	
 	public static final String Driver = "com.mysql.cj.jdbc.Driver";
-	public static final String URL ="jdbc:mysql://localhost:3306/ezticket?serverTimezone=Asia/Taipei";
+	public static final String URL = System.getenv("SPRING_DATASOURCE_URL") + "?serverTimezone=Asia/Taipei";
 	public static final String USER = "root";
 	public static final String PASSWORD = "root";
 	

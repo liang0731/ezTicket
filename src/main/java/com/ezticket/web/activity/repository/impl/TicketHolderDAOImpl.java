@@ -10,9 +10,9 @@ import java.util.List;
 public class TicketHolderDAOImpl implements TicketHolderDAO {
 
     String driver = "com.mysql.cj.jdbc.Driver";
-    String url = "jdbc:mysql://localhost:3306/ezticket?serverTimezone=Asia/Taipei";
-    String userid = "root";
-    String passwd = "root";
+    String url = System.getenv("SPRING_DATASOURCE_URL") + "?serverTimezone=Asia/Taipei";
+    String userid = System.getenv("MYSQL_USER");
+    String passwd = System.getenv("MYSQL_PASSWORD");
     private static final String GET_ONE_STMT =
             "SELECT collectno, memberno, mname, memail, tdetailsno, tstatus, activityno, aname, "
                     + "wetherseat, aimg, sessionstime, sessionetime, blockname, realx, realy, anote, aticketremind, aplace, aplaceaddress "
