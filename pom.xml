@@ -11,7 +11,7 @@
 	<groupId>com</groupId>
 	<artifactId>ezticket</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>ezticket</name>
 	<description>EzTicket for Spring Boot</description>
 	<properties>
@@ -81,15 +81,6 @@
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.hibernate.validator</groupId>
-			<artifactId>hibernate-validator</artifactId>
-		</dependency>
-
-
-
-
-<!--		Add on 04/08-->
 		<dependency>
 			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>

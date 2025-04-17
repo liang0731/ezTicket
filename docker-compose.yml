@@ -1,0 +1,75 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ezticket-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3307:${MYSQL_PORT}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - mynetwork
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 30s   # 每 30 秒檢查一次
+      timeout: 10s    # 每次檢查的超時時間設定為 10 秒
+      retries: 10     # 失敗後重試 10 次，意味著最多等 300 秒（
+  redis:
+    image: redis:6.2
+    container_name: ezticket-redis
+    ports:
+      - "6380:${REDIS_PORT}"
+    networks:
+      - mynetwork
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ezticket-app
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "8086:${SERVER_PORT}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SERVER_PORT: ${SERVER_PORT}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASE: ${REDIS_DATABASE}
+
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+#
+#      SPRING_DATASOURCE_URL: "jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DATABASE}"
+#      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+#      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+#      SPRING_REDIS_PORT: ${REDIS_PORT}
+#      SPRING_REDIS_HOST: ${REDIS_HOST}
+#      SPRING_REDIS_PASSWORD: ${REDIS_PASSWORD}
+#      SPRING_MAIL_HOST: ${EMAIL_HOST}
+#      SPRING_MAIL_PORT: ${EMAIL_PORT}
+#      SPRING_MAIL_USERNAME: ${EMAIL_USERNAME}
+#      SPRING_MAIL_PASSWORD: ${EMAIL_PASSWORD}
+#      SPRING_PORT: ${SERVER_PORT}
+    networks:
+      - mynetwork
+
+volumes:
+  mysql_data:
+
+networks:
+  mynetwork:
+    driver: bridge

@@ -78,35 +78,38 @@ public class PorderService {
         // 0 未處理 1 已出貨 2 已結案 3 已取消 4 取消申請
         Integer paymentStatus = porder.getPpaymentstatus();
 
-        if (paymentStatus == 0) {
-            // 如果訂單未付款，只能取消訂單，不能執行其他操作
-            if (processStatus == 4) {
-                processStatus = 3;
-            } else if (processStatus != 3 && processStatus != 4) {
-                throw new IllegalStateException("未付款的訂單只能取消");
+        switch (paymentStatus) {
+            case 0 -> {
+                // 如果訂單未付款，只能取消訂單，不能執行其他操作
+                if (processStatus == 4) {
+                    processStatus = 3;
+                } else if (processStatus != 3 && processStatus != 4) {
+                    throw new IllegalStateException("未付款的訂單只能取消");
+                }
             }
-        } else if (paymentStatus == 1) {
-            // 如果訂單已付款
-            if (processStatus == 3) {
-                // 如果要取消訂單，則付款狀態改為退款
-                porder.setPpaymentstatus(2);
-                porder.setPprocessstatus(3);
-            } else if (processStatus == 4) {
-                // 如果要將訂單標記為“取消申請”狀態
-                porder.setPprocessstatus(4);
-            } else if (processStatus == 1) {
-                // 如果訂單付款，則可以出貨
-                porder.setPprocessstatus(2);
-            } else if (processStatus == 2) {
-                // 如果訂單已出貨，則可以結案
-                porder.setPprocessstatus(2);
-            } else {
-                // 其他狀態都不允許
-                throw new IllegalStateException("訂單已付款，不能執行此操作");
+            case 1 -> {
+                // 如果訂單已付款
+                if (processStatus == 3) {
+                    // 如果要取消訂單，則付款狀態改為退款
+                    porder.setPpaymentstatus(2);
+                    porder.setPprocessstatus(3);
+                } else if (processStatus == 4) {
+                    // 如果要將訂單標記為“取消申請”狀態
+                    porder.setPprocessstatus(4);
+                } else if (processStatus == 1) {
+                    // 如果訂單付款，則可以出貨
+                    porder.setPprocessstatus(2);
+                } else if (processStatus == 2) {
+                    // 如果訂單已出貨，則可以結案
+                    porder.setPprocessstatus(2);
+                } else {
+                    // 其他狀態都不允許
+                    throw new IllegalStateException("訂單已付款，不能執行此操作");
+                }
             }
-        } else {
-            // 其他付款狀態都不允許
-            throw new IllegalStateException("未知的訂單付款狀態");
+            default ->
+                // 其他付款狀態都不允許
+                    throw new IllegalStateException("未知的訂單付款狀態");
         }
 
         switch (processStatus) {
@@ -169,23 +172,23 @@ public class PorderService {
         Member member = memberRepository.getReferenceById(porderno.getMemberno());
         emailService.sendOrderMail(member.getMname(),member.getMemail(),porder.getPorderno().toString(), String.valueOf(1));
         List<OrderProductDTO> orderProducts = addPorderDTO.getOrderProducts();
-        for (int i = 0; i < orderProducts.size(); i++) {
+        for (OrderProductDTO orderProduct : orderProducts) {
             Pdetails pdetails = new Pdetails();
             PdetailsPK pdetailsPK = new PdetailsPK();
             pdetailsPK.setPorderno(porderno.getPorderno());
-            pdetailsPK.setProductno(orderProducts.get(i).getProductno());
+            pdetailsPK.setProductno(orderProduct.getProductno());
             pdetails.setPdetailsNo(pdetailsPK);
-            pdetails.setPorderqty(orderProducts.get(i).getQuantity());
-            pdetails.setPprice(orderProducts.get(i).getPprice());
+            pdetails.setPorderqty(orderProduct.getQuantity());
+            pdetails.setPprice(orderProduct.getPprice());
             pdetails.setPcommentstatus(0);
             pdetailsRepository.save(pdetails);
-            Product product = dao.getByPrimaryKey(orderProducts.get(i).getProductno());
-            if(product.getPqty() < orderProducts.get(i).getQuantity()){
+            Product product = dao.getByPrimaryKey(orderProduct.getProductno());
+            if (product.getPqty() < orderProduct.getQuantity()) {
                 throw new RuntimeException("庫存不足");
             }
-            product.setPqty(product.getPqty() - orderProducts.get(i).getQuantity());
+            product.setPqty(product.getPqty() - orderProduct.getQuantity());
             dao.update(product);
-            top10Dao.addKeyValue(String.valueOf(product.getProductno()),orderProducts.get(i).getQuantity());
+            top10Dao.addKeyValue(String.valueOf(product.getProductno()), orderProduct.getQuantity());
 
         }
         return EntityToDTO(porder);

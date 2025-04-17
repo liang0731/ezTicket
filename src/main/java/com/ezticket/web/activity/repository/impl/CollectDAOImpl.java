@@ -9,9 +9,9 @@ import java.util.List;
 
 public class CollectDAOImpl implements CollectDAO {
     String driver = "com.mysql.cj.jdbc.Driver";
-    String url = "jdbc:mysql://localhost:3306/ezticket?serverTimezone=Asia/Taipei";
-    String userid = "root";
-    String passwd = "root";
+    String url = System.getenv("SPRING_DATASOURCE_URL") + "?serverTimezone=Asia/Taipei";
+    String userid = System.getenv("MYSQL_USER");
+    String passwd = System.getenv("MYSQL_PASSWORD");
 
     private static final String INSERT_STMT =
             "INSERT INTO collect (memberno, tdetailsno,qrcode) VALUES (?, ?, ?)";
