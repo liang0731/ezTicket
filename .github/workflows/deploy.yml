@@ -26,12 +26,16 @@ jobs:
 
       - name: Upload project to NAS
         run: |
-          rsync -avz -e "ssh -p ${{ secrets.NAS_PORT }}" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }}" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
 
       - name: Remote deploy
         run: |
-          ssh -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
             cd ~/ezticket
             docker-compose down
             docker-compose up -d --build
           EOF
+
+      - name: Test SSH connection
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "echo SSH connection success"
