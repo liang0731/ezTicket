@@ -19,6 +19,12 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Create a test file to confirm deploy
+        run: |
+          echo "Deployment successful at $(date)" > deploy_success.txt
+          cat deploy_success.txt
 
       - name: Create .env from secret
         run: |
