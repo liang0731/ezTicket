@@ -16,25 +16,25 @@ jobs:
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github-to-nas-deploy
+          chmod 600 ~/.ssh/github-to-nas-deploy
           ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
 
       - name: Create .env from secret
         run: |
-          echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
+          echo "${{ secrets.ENV_FILE_CONTENTS }}" > .
 
-      - name: Show fingerprint of private key
+      - name: Test SSH Connection
         run: |
-          ssh-keygen -lf ~/.ssh/id_ed25519
+          ssh -i ~/.ssh/github-to-nas-deploy -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "echo 'SSH connection successful'"
 
       - name: Upload project to NAS
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          rsync -avz -e "ssh -i ~/.ssh/github-to-nas-deploy -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
 
       - name: Remote deploy
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
+          ssh -i ~/.ssh/github-to-nas-deploy -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
             cd ~/ezticket
             docker-compose down
             docker-compose up -d --build
