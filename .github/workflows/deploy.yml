@@ -19,19 +19,14 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
-          echo "Host *" >> ~/.ssh/config
 
       - name: Create .env from secret
         run: |
           echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
 
-      - name: Ensure target dir exists
+      - name: Upload project to NAS
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "mkdir -p ~/ezticket"
-
-      - name: Upload project to NAS using SCP with debug
-        run: |
-          scp -v -i ~/.ssh/id_ed25519 -P ${{ secrets.NAS_PORT }} -r ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          rsync -avz -vvv --progress -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:/var/services/homes/github-runner/ezticket
 
       - name: Remote deploy
         run: |
