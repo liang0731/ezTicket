@@ -30,7 +30,7 @@ jobs:
 
       - name: Upload project to NAS
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/github-to-nas-deploy -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          rsync -avz -vvv -e "ssh -i ~/.ssh/github-to-nas-deploy -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
 
       - name: Remote deploy
         run: |
