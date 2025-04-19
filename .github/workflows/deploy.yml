@@ -21,11 +21,6 @@ jobs:
           ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
-      - name: Create a test file to confirm deploy
-        run: |
-          echo "Deployment successful at $(date)" > deploy_success.txt
-          cat deploy_success.txt
-
       - name: Create .env from secret
         run: |
           echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
