@@ -13,6 +13,12 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v3
 
+      - name: Show NAS connection info
+        run: |
+          echo "🔍 NAS_PORT: ${{ secrets.NAS_PORT }}"
+          echo "🔍 NAS_HOST: ${{ secrets.NAS_HOST }}"
+          echo "🔍 NAS_USER: ${{ secrets.NAS_USER }}"
+
       - name: Set up SSH
         run: |
           mkdir -p ~/.ssh
