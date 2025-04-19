@@ -22,7 +22,7 @@ jobs:
 
       - name: Create .env from secret
         run: |
-          echo "${{ secrets.ENV_FILE_CONTENTS }}" > .
+          echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
 
       - name: Test SSH Connection
         run: |
