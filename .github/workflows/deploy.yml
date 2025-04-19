@@ -20,10 +20,6 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Test SSH key validity
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "echo Success"
-
       - name: Create .env from secret
         run: |
           echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
@@ -34,7 +30,7 @@ jobs:
 
       - name: Upload project to NAS
         run: |
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }}" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
 
       - name: Remote deploy
         run: |
