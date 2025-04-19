@@ -24,18 +24,14 @@ jobs:
         run: |
           echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
 
-      - name: Test SSH Connection
-        run: |
-          ssh -v -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "echo 'SSH connection successful'"
-
       - name: Upload project to NAS
         run: |
-          rsync -avz -vvv -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          rsync -avz -vvv -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:/var/services/homes/github-runner/ezticket
 
       - name: Remote deploy
         run: |
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
-            cd ~/ezticket
+            cd /var/services/homes/github-runner/ezticket
             docker-compose down
             docker-compose up -d --build
           EOF
