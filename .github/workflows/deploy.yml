@@ -26,11 +26,11 @@ jobs:
 
       - name: Test SSH Connection
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "echo 'SSH connection successful'"
+          ssh -v -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "echo 'SSH connection successful'"
 
       - name: Upload project to NAS
         run: |
-          rsync -avz -vvv -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          rsync -avz -vvv -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
 
       - name: Remote deploy
         run: |
