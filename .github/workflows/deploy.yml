@@ -18,16 +18,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
+          ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/
 
-      - name: Check target directory permissions
+      - name: Test SSH connection
         run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "ls -la /var/services/homes/github-runner/"
-
-      - name: Test file transfer
-        run: |
-          echo "test" > test.txt
-          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" test.txt ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:/var/services/homes/github-runner/
+          ssh -v -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} exit
 
       - name: Create .env from secret
         run: |
