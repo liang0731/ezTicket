@@ -29,9 +29,9 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "mkdir -p ~/ezticket"
 
-      - name: Upload project to NAS using SCP
+      - name: Upload project to NAS using SCP with debug
         run: |
-          scp -i ~/.ssh/id_ed25519 -P ${{ secrets.NAS_PORT }} -r ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
+          scp -v -i ~/.ssh/id_ed25519 -P ${{ secrets.NAS_PORT }} -r ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:~/ezticket
 
       - name: Remote deploy
         run: |
