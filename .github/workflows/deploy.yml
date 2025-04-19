@@ -20,14 +20,14 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Test SSH connection
+      - name: Check target directory permissions
         run: |
-          ssh -vvv -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "echo SSH connected"
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} "ls -la /var/services/homes/github-runner/"
 
-      - name: Rsync test single file
+      - name: Test file transfer
         run: |
-          echo "test file content" > rsync-test.txt
-          rsync -avz -vvv -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" rsync-test.txt ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:/var/services/homes/github-runner/
+          echo "test" > test.txt
+          rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" test.txt ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:/var/services/homes/github-runner/
 
       - name: Create .env from secret
         run: |
