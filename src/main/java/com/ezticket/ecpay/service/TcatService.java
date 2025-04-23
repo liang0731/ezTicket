@@ -1,5 +1,6 @@
 package com.ezticket.ecpay.service;
 
+import com.ezticket.core.util.UrlProvider;
 import com.ezticket.web.product.pojo.Porder;
 import com.ezticket.web.product.repository.PorderRepository;
 import ecpay.logistics.integration.AllInOne;
@@ -11,18 +12,22 @@ import org.springframework.stereotype.Service;
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.UUID;
 
 @Service
 public class TcatService {
 
     @Autowired
     private PorderRepository porderRepository;
+    @Autowired
+    private UrlProvider urlProvider;
     // 產生黑貓物流訂單
     public String postCreateHomeOrder (Integer porderno) throws UnsupportedEncodingException {
         AllInOne all = new AllInOne("");
         CreateHomeObj obj = new CreateHomeObj();
         Porder porder = porderRepository.getReferenceById(porderno);
-        obj.setMerchantTradeNo("ezTicket0200000" + porderno);
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 15);
+        obj.setMerchantTradeNo(uuid + porderno);
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         String Now = now.format(formatter);
@@ -33,9 +38,8 @@ public class TcatService {
         obj.setSenderCellPhone("0987254088");
         obj.setReceiverName(porder.getRecipient());
         obj.setReceiverCellPhone(porder.getRephone());
-        String returnURL = "https://f8a7-111-249-12-115.jp.ngrok.io";
         // 設定接收回傳值的Https + Controller路徑
-        obj.setServerReplyURL(returnURL + "/ecpay/tcat/return");
+        obj.setServerReplyURL(urlProvider.getReturnURL() + "/ecpay/tcat/return");
         // 擷取地址
         String zipcode = porder.getReaddress().substring(0, 3).toString();
         String address = porder.getReaddress().substring(3).toString();

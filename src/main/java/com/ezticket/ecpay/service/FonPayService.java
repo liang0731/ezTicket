@@ -1,5 +1,6 @@
 package com.ezticket.ecpay.service;
 
+import com.ezticket.core.util.UrlProvider;
 import com.ezticket.web.product.pojo.Pdetails;
 import com.ezticket.web.product.pojo.Porder;
 import com.ezticket.web.product.pojo.Product;
@@ -31,6 +32,8 @@ public class FonPayService {
     private PdetailsRepository pdetailsRepository;
     @Autowired
     private ProductDAO productRepository;
+    @Autowired
+    private UrlProvider urlProvider;
 
     static String FONPAY_API_KEY = "593833005619";
     static String FONPAY_API_SECRET = "Ln95pHin6gFE2ev3qXff";
@@ -38,6 +41,8 @@ public class FonPayService {
     static String FONPAY_API_SECRET_LINE = "FzGBjuHatXDjY5eHxec7";
     static String FONPAY_API_MERCHANT_CODE = "ME10679778";
     static String PAYMENT_CREATE_ORDER = "PaymentCreateOrder";
+
+
     public String fonpayCheckout(Integer porderno, String paytype) throws IOException {
         URL url = new URL("https://test-api.fonpay.tw/api/payment/" + PAYMENT_CREATE_ORDER);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -60,22 +65,10 @@ public class FonPayService {
         // 延長10分鐘付款時間並轉換格式
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String Now = now.plusMinutes(10).format(formatter);
-
-        // 取得自身IP
-        InetAddress ip = null;
-        try {
-            // 使用可能會拋出異常的方法
-            ip = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            // 處理異常
-            System.err.println(e);
-        }
-        String hostname = ip.getHostAddress();
         // 付款完成後，接收GET請求更新資料庫
-        String local = "http://" + hostname + ":8085" + "/ecpay/paymentReturn";
+        String local = urlProvider.getLocalURL() + ":8085" + "/ecpay/paymentReturn";
         // 若有提供，系統會在訂單狀態異動時由背景呼叫,此網址通知電商，
-        String httpsUrl = "https://f179-2001-b011-a406-9b56-55a6-b336-7276-92d0.jp.ngrok.io";
-        String callback = httpsUrl + "/ecpay/fonpay/return";
+        String callback = urlProvider.getReturnURL() + "/ecpay/fonpay/return";
         // 商品明細
         String itemList = "";
         List<Pdetails> pdetailsList = pdetailsRepository.findByPorderno(porderno);

@@ -1,6 +1,7 @@
 package com.ezticket.ecpay.service;
 
 import com.ezticket.core.service.EmailService;
+import com.ezticket.core.util.UrlProvider;
 import com.ezticket.web.activity.pojo.Seats;
 import com.ezticket.web.activity.pojo.Session;
 import com.ezticket.web.activity.pojo.Tdetails;
@@ -21,6 +22,7 @@ import com.ezticket.web.users.repository.MemberRepository;
 import ecpay.payment.integration.AllInOne;
 import ecpay.payment.integration.domain.AioCheckOutALL;
 import ecpay.payment.integration.domain.QueryTradeInfoObj;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class OrderService {
@@ -65,17 +68,20 @@ public class OrderService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private UrlProvider urlProvider;
+
+
     public String ecpayCheckout(Integer porderno) {
-
 		// 綠界的方法裡面都有註解，可以點進去看
-
 		// 建立AllInOne物件
 		AllInOne all = new AllInOne("");
 		// 取得訂單
 		Porder porder = porderRepository.getReferenceById(porderno);
 		AioCheckOutALL obj = new AioCheckOutALL();
 		// 綠界規定須20碼,放入訂單編號15碼+訂單編號5碼
-		obj.setMerchantTradeNo("ezTicket0200000" + porderno);
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 15);
+		obj.setMerchantTradeNo(uuid + porderno);
 		// 取得當前時間，放入時間
 		LocalDateTime now = LocalDateTime.now();
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -97,31 +103,14 @@ public class OrderService {
 		// 塞入商品明細
 		obj.setItemName(itemList);
 
-		//	放入你自己架的HTTPS
-		//	沒有的話下載並安裝 Ngrok，並註冊一個 Ngrok 帳號。
-		//	啟動本地伺服器，例如 Tomcat 或是 Spring Boot。
-		//	在命令列輸入 ngrok http 8080，其中 8080 是你本機伺服器的 Port，請依實際情況更改。
-		//	Ngrok 會顯示一個公開的 URL，例如 http://xxxxxx.ngrok.io，複製此 URL。
-		String returnURL = "https://f179-2001-b011-a406-9b56-55a6-b336-7276-92d0.jp.ngrok.io";
 		// 設定接收回傳值的Https + Controller路徑
-		obj.setReturnURL(returnURL + "/ecpay/return");
+		obj.setReturnURL(urlProvider.getReturnURL() + "/ecpay/return");
 		// 設定商品明細路徑及返回商店路徑
 		// 利用自身IP取得路徑返回商店
-		// 因應大家IP不同，用方法取得自己的ip
-		InetAddress ip = null;
-		try {
-			// 使用可能會拋出異常的方法
-			ip = InetAddress.getLocalHost();
-		} catch (UnknownHostException e) {
-			// 處理異常
-			System.err.println(e);
-		}
-		String hostname = ip.getHostAddress();
-		String local = "http://" + hostname + ":8085";
 		String confirmedUrl = "/front-product-order_confirmed.html?id=" + porderno;
 		String detailUrl = "/front-product-order_detail.html?id=" + porderno;
-		obj.setClientBackURL(local + confirmedUrl);
-		obj.setItemURL(local + detailUrl);
+		obj.setClientBackURL(urlProvider.getLocalURL() + confirmedUrl);
+		obj.setItemURL(urlProvider.getLocalURL() + detailUrl);
 		// 是否需要額外的付款資訊
 		obj.setNeedExtraPaidInfo("N");
 		// 會回傳一個form表單
@@ -147,8 +136,9 @@ public class OrderService {
         // 取得訂單
         Torder torder = torderRepository.getReferenceById(torderNo);
         AioCheckOutALL obj = new AioCheckOutALL();
-        // // 綠界規定須20碼,放入訂單編號15碼+訂單編號5碼
-        obj.setMerchantTradeNo("ezTicket0000000" + torderNo);
+        // 綠界規定須20碼,放入訂單編號15碼+訂單編號5碼
+        String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 15);
+        obj.setMerchantTradeNo(uuid + torderNo);
         // 取得當前時間，放入時間
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
@@ -177,29 +167,10 @@ public class OrderService {
         // 塞入票券明細
         obj.setItemName(itemList);
 
-        //	放入你自己架的 HTTPS
-        //	沒有的話下載並安裝 Ngrok，並註冊一個 Ngrok 帳號。
-        //	啟動本地伺服器，例如 Tomcat 或是 Spring Boot。
-        //	在命令列輸入 ngrok http 8080，其中 8080 是你本機伺服器的 Port，請依實際情況更改。
-        //	Ngrok 會顯示一個公開的 URL，例如 https://xxxxxx.ngrok.io，複製此 URL。
-        String returnURL = "https://f179-2001-b011-a406-9b56-55a6-b336-7276-92d0.jp.ngrok.io";
-        obj.setReturnURL(returnURL + "/ecpay/Treturn");
-
-        // 設定票券訂單明細路徑及返回商店路徑
-        // 利用自身IP取得路徑返回商店
-        // 因應大家IP不同，用方法取得自己的ip
-        InetAddress ip = null;
-        try {
-            // 使用可能會拋出異常的方法
-            ip = InetAddress.getLocalHost();
-        } catch (UnknownHostException e) {
-            // 處理異常
-            System.err.println(e);
-        }
-        String hostname = ip.getHostAddress();
-        String local = "http://" + hostname + ":8085";
+        // 設定接收回傳值的Https + Controller路徑
+        obj.setReturnURL(urlProvider.getReturnURL() + "/ecpay/Treturn");
         String confirmedUrl = "/front-activity-orderconfirm.html?id=" + torderNo;
-        obj.setClientBackURL(local + confirmedUrl);
+        obj.setClientBackURL(urlProvider.getLocalURL() + confirmedUrl);
 
         // 是否需要額外的付款資訊 ngrok http 8080
         obj.setNeedExtraPaidInfo("N");

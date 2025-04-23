@@ -1,6 +1,7 @@
 package com.ezticket.ecpay.controller;
 
 import com.ezticket.core.service.EmailService;
+import com.ezticket.core.util.UrlProvider;
 import com.ezticket.ecpay.service.FonPayService;
 import com.ezticket.ecpay.service.OrderService;
 import com.ezticket.ecpay.service.TcatService;
@@ -43,7 +44,8 @@ public class OrderController {
 	EmailService emailService;
 	@Autowired
 	CollectCrudService collectCrudService;
-
+	@Autowired
+	UrlProvider urlProvider;
     @Autowired
     TorderService torderService;
 	@Autowired
@@ -55,7 +57,7 @@ public class OrderController {
 		return createTcatOrder;
 	}
 	@PostMapping("/tcat/checkout")
-	public String printOrder (Integer porderno) {
+	public String printOrder(Integer porderno) {
 		Porder porder = porderRepository.getReferenceById(porderno);
 		if (porder.getLogisticsid() == null){
 			return "單據不存在或尚未建立單據";
@@ -168,17 +170,8 @@ public class OrderController {
 			porder.setPpaymentstatus(1);
 			porderRepository.save(porder);
 		}
-		// 取得自身IP
-		InetAddress ip = null;
-		try {
-			// 使用可能會拋出異常的方法
-			ip = InetAddress.getLocalHost();
-		} catch (UnknownHostException e) {
-			// 處理異常
-			System.err.println(e);
-		}
-		String hostname = ip.getHostAddress();
-		String local = "http://" + hostname + ":8085" + "/front-product-order_confirmed.html?id=" + porder.getPorderno();
+
+		String local = urlProvider.getLocalURL() + "/front-product-order_confirmed.html?id=" + porder.getPorderno();
 		// 重導至訂單成立畫面
 		RedirectView redirectView = new RedirectView(local);
 		redirectView.setExposeModelAttributes(false);
