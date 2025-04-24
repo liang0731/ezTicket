@@ -52,6 +52,8 @@ services:
       EMAIL_PORT: ${EMAIL_PORT}
       EMAIL_USERNAME: ${EMAIL_USERNAME}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+
+      ECPAY_RETURN_URL: ${ECPAY_RETURN_URL}
     networks:
       - mynetwork
 
