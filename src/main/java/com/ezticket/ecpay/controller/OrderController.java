@@ -171,7 +171,7 @@ public class OrderController {
 			porderRepository.save(porder);
 		}
 
-		String local = urlProvider.getLocalURL() + "/front-product-order_confirmed.html?id=" + porder.getPorderno();
+		String local = urlProvider.getReturnURL() + "/front-product-order_confirmed.html?id=" + porder.getPorderno();
 		// 重導至訂單成立畫面
 		RedirectView redirectView = new RedirectView(local);
 		redirectView.setExposeModelAttributes(false);

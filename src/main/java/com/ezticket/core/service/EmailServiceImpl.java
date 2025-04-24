@@ -160,7 +160,7 @@ public class EmailServiceImpl implements EmailService {
         String htmlContent = "<p>親愛的" + name + "先生/小姐：</p>" +
                 "<p>此為系統通知信件：</p>" +
                 "<p>您追蹤的商品" + pname + "已降價，目前優惠價格為" + specialPrice + "</p>" +
-                "<p><a href='" + urlProvider.getLocalURL() + "/front-product-product_detail.html?productno=10001'>立即前往商品頁面查看詳情</a></p>" +
+                "<p><a href='" + urlProvider.getReturnURL() + "/front-product-product_detail.html?productno=10001'>立即前往商品頁面查看詳情</a></p>" +
                 "<p>再次感謝您對我們網站的支持。祝您購物愉快！</p>" +
                 "<p>請勿直接回覆此信件。</p>" +
                 "<p>敬祝" + name + "身體健康、事事如意！</p>" +
@@ -223,7 +223,7 @@ public class EmailServiceImpl implements EmailService {
         System.out.println(sender);
         String htmlContent = "<p>親愛的" + mname + "先生/小姐：</p>" +
                 "<p>有人轉贈票券給您唷！</p>" +
-                "<p><a href='" + urlProvider.getLocalURL() + "/front-activity-ticket-holder.html'>立即前往票夾看看吧！</a></p>" +
+                "<p><a href='" + urlProvider.getReturnURL() + "/front-activity-ticket-holder.html'>立即前往票夾看看吧！</a></p>" +
                 "<p>此為系統通知信件，請勿直接回覆此信件。</p>" +
                 "<p>敬祝您身體健康、事事如意！</p>" +
                 "<p>                                           ezTicket - 一站式購票體驗</p>";

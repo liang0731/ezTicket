@@ -106,8 +106,8 @@ public class OrderService {
         // 利用自身IP取得路徑返回商店
         String confirmedUrl = "/front-product-order_confirmed.html?id=" + porderno;
         String detailUrl = "/front-product-order_detail.html?id=" + porderno;
-        obj.setClientBackURL(urlProvider.getLocalURL() + confirmedUrl);
-        obj.setItemURL(urlProvider.getLocalURL() + detailUrl);
+        obj.setClientBackURL(urlProvider.getReturnURL() + confirmedUrl);
+        obj.setItemURL(urlProvider.getReturnURL() + detailUrl);
         // 是否需要額外的付款資訊
         obj.setNeedExtraPaidInfo("N");
         // 會回傳一個form表單
@@ -167,7 +167,7 @@ public class OrderService {
         // 設定接收回傳值的Https + Controller路徑
         obj.setReturnURL(urlProvider.getReturnURL() + "/ecpay/Treturn");
         String confirmedUrl = "/front-activity-orderconfirm.html?id=" + torderNo;
-        obj.setClientBackURL(urlProvider.getLocalURL() + confirmedUrl);
+        obj.setClientBackURL(urlProvider.getReturnURL() + confirmedUrl);
 
         // 是否需要額外的付款資訊 ngrok http 8080
         obj.setNeedExtraPaidInfo("N");

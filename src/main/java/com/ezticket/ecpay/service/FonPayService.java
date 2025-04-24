@@ -66,7 +66,7 @@ public class FonPayService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String Now = now.plusMinutes(10).format(formatter);
         // 付款完成後，接收GET請求更新資料庫
-        String local = urlProvider.getLocalURL() + ":8085" + "/ecpay/paymentReturn";
+        String local = urlProvider.getReturnURL() + "/ecpay/paymentReturn";
         // 若有提供，系統會在訂單狀態異動時由背景呼叫,此網址通知電商，
         String callback = urlProvider.getReturnURL() + "/ecpay/fonpay/return";
         // 商品明細
