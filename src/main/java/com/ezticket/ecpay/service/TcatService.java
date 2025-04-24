@@ -21,8 +21,9 @@ public class TcatService {
     private PorderRepository porderRepository;
     @Autowired
     private UrlProvider urlProvider;
+
     // 產生黑貓物流訂單
-    public String postCreateHomeOrder (Integer porderno) throws UnsupportedEncodingException {
+    public String postCreateHomeOrder(Integer porderno) throws UnsupportedEncodingException {
         AllInOne all = new AllInOne("");
         CreateHomeObj obj = new CreateHomeObj();
         Porder porder = porderRepository.getReferenceById(porderno);
@@ -60,7 +61,7 @@ public class TcatService {
         return all.create(obj);
     }
 
-    public String postPrintTradeDocumentOrder (String allPayLogisticsID){
+    public String postPrintTradeDocumentOrder(String allPayLogisticsID) {
         AllInOne all = new AllInOne("");
         PrintTradeDocumentObj obj = new PrintTradeDocumentObj();
         obj.setMerchantID("2000132");

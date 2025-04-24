@@ -11,10 +11,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
@@ -194,7 +191,16 @@ public class EcpayFunction {
 			throw new EcpayException(ErrorMessage.CONF_FILE_ERROR);
 		}
 	}
-	
+
+	public static Document xmlParser(InputStream is) {
+		try {
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			return builder.parse(is);
+		} catch (Exception e) {
+			throw new RuntimeException("解析 XML 失敗", e);
+		}
+	}
 	/**
 	 * https 處理
 	 */

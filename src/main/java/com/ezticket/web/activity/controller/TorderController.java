@@ -5,8 +5,6 @@ import com.ezticket.web.activity.dto.AddTorderDTO;
 import com.ezticket.web.activity.dto.TorderDto;
 import com.ezticket.web.activity.pojo.Torder;
 import com.ezticket.web.activity.service.TorderService;
-import com.ezticket.web.product.dto.AddPorderDTO;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,7 +48,7 @@ public class TorderController {
 
     @PostMapping("/deleteTorder")
     public void deleteTorder(@RequestParam Integer torderNo) {
-         torderService.deleteTorder(torderNo);
+        torderService.deleteTorder(torderNo);
     }
 
 }
