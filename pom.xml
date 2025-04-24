@@ -135,10 +135,44 @@
 					<finalName>ezticket</finalName> <!-- 指定檔名 app.jar -->
 				</configuration>
 			</plugin>
+
+			<!-- 版本插件 -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
 				<version>2.15.0</version>
+			</plugin>
+
+			<!-- 添加 Maven 資源插件來處理 XML 文件 -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<resources>
+								<resource>
+									<directory>src/main/java</directory>
+									<includes>
+										<include>ecpay/payment/integration/config/*.xml</include> <!-- 匹配多個 XML 檔案 -->
+									</includes>
+								</resource>
+								<resource>
+									<directory>src/main/java</directory>
+									<includes>
+										<include>ecpay/logistics/integration/config/*.xml
+										</include> <!-- 匹配另一組 XML 檔案 -->
+									</includes>
+								</resource>
+							</resources>
+							<outputDirectory/>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
