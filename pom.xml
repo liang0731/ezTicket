@@ -154,6 +154,7 @@
 							<goal>copy-resources</goal>
 						</goals>
 						<configuration>
+							<outputDirectory>${project.build.directory}/classes</outputDirectory> <!-- 指定輸出目錄 -->
 							<resources>
 								<resource>
 									<directory>src/main/java</directory>
@@ -169,7 +170,6 @@
 									</includes>
 								</resource>
 							</resources>
-							<outputDirectory/>
 						</configuration>
 					</execution>
 				</executions>
