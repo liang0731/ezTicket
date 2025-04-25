@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -82,7 +83,7 @@ public class TorderService {
         torder.setMemberNo(addTorderDTO.getMemberno());
         torder.setTtotal(addTorderDTO.getTtotal());
         torder.setTcheckTotal(addTorderDTO.getTcheckTotal());
-        torder.setTorderDate(Timestamp.valueOf(LocalDateTime.now()));
+        torder.setTorderDate(Timestamp.valueOf(LocalDateTime.now(ZoneId.of("Asia/Taipei"))));
         torder.setTpaymentStatus(0);
         torder.setTprocessStatus(0);
 

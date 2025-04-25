@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
@@ -80,7 +81,7 @@ public class OrderService {
         String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 15);
         obj.setMerchantTradeNo(uuid + porderno);
         // 取得當前時間，放入時間
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         String Now = now.format(formatter);
         obj.setMerchantTradeDate(Now);
@@ -137,7 +138,7 @@ public class OrderService {
         String uuid = UUID.randomUUID().toString().replace("-", "").substring(0, 15);
         obj.setMerchantTradeNo(uuid + torderNo);
         // 取得當前時間，放入時間
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
         String Now = now.format(formatter);
         obj.setMerchantTradeDate(Now);

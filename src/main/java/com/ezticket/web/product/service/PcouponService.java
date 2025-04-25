@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +141,7 @@ public class PcouponService {
     // 每小時檢查Coupon使用狀態
     @Scheduled(cron = "0 0 * * * *")
     public void checkPouconStatus() {
-        LocalDateTime today = LocalDateTime.now();
+        LocalDateTime today = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
         List<Pcoupon> pcoupons = pcouponRepository.findAll();
 
         for (Pcoupon pcoupon : pcoupons) {

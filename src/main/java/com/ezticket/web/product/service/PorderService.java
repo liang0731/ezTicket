@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -111,17 +112,18 @@ public class PorderService {
                 // 其他付款狀態都不允許
                     throw new IllegalStateException("未知的訂單付款狀態");
         }
-
+        // 設定時間
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
         switch (processStatus) {
             case 1:
-                porder.setPshipdate(LocalDateTime.now());
+                porder.setPshipdate(now);
                 break;
             case 2:
-                porder.setParrivedate(LocalDateTime.now());
-                porder.setPclosedate(LocalDateTime.now());
+                porder.setParrivedate(now);
+                porder.setPclosedate(now);
                 break;
             case 3:
-                porder.setPclosedate(LocalDateTime.now());
+                porder.setPclosedate(now);
                 List<Pdetails> pdetails = pdetailsRepository.findByPorderno(porder.getPorderno());
                 for (Pdetails pdetail : pdetails) {
                     Product product = dao.getByPrimaryKey(pdetail.getPdetailsNo().getProductno());
@@ -160,7 +162,7 @@ public class PorderService {
         porder.setRecipient(addPorderDTO.getRecipient());
         porder.setRephone(addPorderDTO.getRephone());
         porder.setReaddress(addPorderDTO.getReaddress());
-        porder.setPorderdate(LocalDateTime.now());
+        porder.setPorderdate(LocalDateTime.now(ZoneId.of("Asia/Taipei")));
         porder.setPpaymentstatus(0);
         porder.setPprocessstatus(0);
         if (addPorderDTO.getPcouponno() != null){
@@ -204,15 +206,17 @@ public class PorderService {
             LocalDateTime start = porder.getPorderdate();
             // 設定成立的11分後
             LocalDateTime end = start.plusMinutes(11);
+            // 現在時間
+            LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
             //  當付款狀態為0 未付款且已超過11分鐘
-            if (porder.getPpaymentstatus() == 0 && LocalDateTime.now().isAfter(end)) {
+            if (porder.getPpaymentstatus() == 0 && now.isAfter(end)) {
                 // 在這裡執行超過11分鐘的動作
                 // 設定付款失敗
                 // 0 未付款 1 已付款 2 已退款 3 付款失敗
                 porder.setPpaymentstatus(3);
                 // 0 未處理 1 已出貨 2 已結案 3 已取消 4 取消確認
                 porder.setPprocessstatus(3);
-                porder.setPclosedate(LocalDateTime.now());
+                porder.setPclosedate(now);
                 porderRepository.save(porder);
                 // 取得訂單明細
                 List<Pdetails> pdetailsList = pdetailsRepository.findByPorderno(porder.getPorderno());

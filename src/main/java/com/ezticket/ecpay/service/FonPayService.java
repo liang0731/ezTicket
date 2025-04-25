@@ -21,8 +21,10 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class FonPayService {
@@ -61,7 +63,7 @@ public class FonPayService {
         con.setRequestProperty("X-ignore", "true");
         con.setDoOutput(true);
         // 建立當下時間
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Taipei"));
         // 延長10分鐘付款時間並轉換格式
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
         String Now = now.plusMinutes(10).format(formatter);
