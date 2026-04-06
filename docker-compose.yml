@@ -57,6 +57,31 @@ services:
     networks:
       - mynetwork
 
+  # Vue 3 SPA frontend (new)
+  vue-frontend:
+    build:
+      context: ../ezTicket_Vue/ezTicket-frontend
+      dockerfile: Dockerfile
+    container_name: ezticket-vue
+    networks:
+      - mynetwork
+
+  # Nginx reverse proxy — routes traffic to Vue SPA or old Spring Boot HTML
+  # To rollback to old HTML: comment out the Vue SPA location block and
+  # uncomment the Spring Boot fallback block, then restart this container.
+  nginx:
+    image: nginx:alpine
+    container_name: ezticket-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - app
+      - vue-frontend
+    networks:
+      - mynetwork
+
 volumes:
   mysql_data:
 
