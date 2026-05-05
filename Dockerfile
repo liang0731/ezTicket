@@ -8,5 +8,6 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jdk-alpine
 VOLUME /tmp
 WORKDIR /app
+RUN apk add --no-cache netcat-openbsd
 COPY --from=builder /app/target/ezticket.jar app.jar
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "until nc -z ${MYSQL_HOST:-mysql} ${MYSQL_PORT:-3306}; do echo \"Waiting for MySQL at ${MYSQL_HOST:-mysql}:${MYSQL_PORT:-3306}\"; sleep 5; done; exec java -jar app.jar"]
