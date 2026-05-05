@@ -33,6 +33,5 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
             cd /var/services/homes/github-runner/ezticket
-            docker-compose down
-            docker-compose up -d --build
+            CONFIRM_RESET_DB=yes sh scripts/nas-clean-deploy.sh
           EOF

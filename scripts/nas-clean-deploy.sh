@@ -27,7 +27,11 @@ $COMPOSE ps -a
 
 echo "Waiting for app HTTP endpoint..."
 for i in $(seq 1 30); do
-  if curl -fsS -I http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
+  if command -v curl >/dev/null 2>&1 && curl -fsS -I http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
+    echo "App is responding on http://127.0.0.1:8086/index.html"
+    exit 0
+  fi
+  if command -v wget >/dev/null 2>&1 && wget -q --spider http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
     echo "App is responding on http://127.0.0.1:8086/index.html"
     exit 0
   fi

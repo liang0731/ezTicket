@@ -19,7 +19,9 @@ $COMPOSE ps -a
 
 echo
 echo "== Local app HTTP =="
-if curl -fsS -I http://127.0.0.1:8086/index.html; then
+if command -v curl >/dev/null 2>&1 && curl -fsS -I http://127.0.0.1:8086/index.html; then
+  echo "local app: OK"
+elif command -v wget >/dev/null 2>&1 && wget -q --spider http://127.0.0.1:8086/index.html; then
   echo "local app: OK"
 else
   echo "local app: FAILED"
