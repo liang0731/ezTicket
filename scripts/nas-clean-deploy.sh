@@ -32,17 +32,18 @@ $COMPOSE ps -a
 
 echo "Waiting for app HTTP endpoint..."
 for i in $(seq 1 180); do
-  if command -v curl >/dev/null 2>&1 && curl -fsS -I http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
+  if command -v curl >/dev/null 2>&1 && curl --connect-timeout 2 --max-time 5 -fsS -I http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
     echo "App is responding on http://127.0.0.1:8086/index.html"
     exit 0
   fi
-  if command -v wget >/dev/null 2>&1 && wget -q --spider http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
+  if command -v wget >/dev/null 2>&1 && wget -q --spider --timeout=5 --tries=1 http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
     echo "App is responding on http://127.0.0.1:8086/index.html"
     exit 0
   fi
   if [ $((i % 12)) -eq 0 ]; then
     echo "Still waiting for app endpoint... ($((i * 5)) seconds)"
     $COMPOSE ps -a || true
+    $COMPOSE logs --tail=80 app || true
   fi
   sleep 5
 done
