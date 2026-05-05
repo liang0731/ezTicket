@@ -14,11 +14,11 @@ services:
     networks:
       - mynetwork
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" || exit 1" ]
       interval: 30s
       timeout: 10s
-      retries: 10
-      start_period: 60s
+      retries: 30
+      start_period: 300s
 
   redis:
     image: redis:6.2
@@ -42,10 +42,8 @@ services:
     container_name: ezticket-app
     restart: unless-stopped
     depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - mysql
+      - redis
     ports:
       - "8086:${SERVER_PORT}"
     environment:

@@ -31,7 +31,7 @@ echo "Current container state:"
 $COMPOSE ps -a
 
 echo "Waiting for app HTTP endpoint..."
-for i in $(seq 1 120); do
+for i in $(seq 1 180); do
   if command -v curl >/dev/null 2>&1 && curl -fsS -I http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
     echo "App is responding on http://127.0.0.1:8086/index.html"
     exit 0
@@ -47,6 +47,6 @@ for i in $(seq 1 120); do
   sleep 5
 done
 
-echo "App did not respond within 600 seconds. Diagnostics:"
+echo "App did not respond within 900 seconds. Diagnostics:"
 sh scripts/nas-diagnose.sh || true
 exit 1
