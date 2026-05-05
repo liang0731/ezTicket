@@ -2,6 +2,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: ezticket-mysql
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -14,24 +15,37 @@ services:
       - mynetwork
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
-      interval: 30s   # 每 30 秒檢查一次
-      timeout: 10s    # 每次檢查的超時時間設定為 10 秒
-      retries: 10     # 失敗後重試 10 次，意味著最多等 300 秒（
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
   redis:
     image: redis:6.2
     container_name: ezticket-redis
+    restart: unless-stopped
     ports:
       - "6380:${REDIS_PORT}"
     networks:
       - mynetwork
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: ezticket-app
+    restart: unless-stopped
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     ports:
       - "8086:${SERVER_PORT}"
     environment:
@@ -42,17 +56,14 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       REDIS_DATABASE: ${REDIS_DATABASE}
-
       EMAIL_HOST: ${EMAIL_HOST}
       EMAIL_PORT: ${EMAIL_PORT}
       EMAIL_USERNAME: ${EMAIL_USERNAME}
       EMAIL_PASSWORD: ${EMAIL_PASSWORD}
-
       ECPAY_RETURN_URL: ${ECPAY_RETURN_URL}
     networks:
       - mynetwork
