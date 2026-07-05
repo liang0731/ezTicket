@@ -23,7 +23,7 @@ public class Member extends Core {
     private byte[] mimg;
     @Column(name = "MEMAIL")
     private String memail;
-    @Column(name = "MPASSWORD")
+    @Column(name = "MPASSWORD", length = 72)
     private String mpassword;
     @Column(name = "MNAME")
     private String mname;

@@ -26,8 +26,8 @@ public class Backuser extends Core {
     @Column(name = "BAACCOUNT")
     private String baaccount;
     @NotBlank(message = "密碼不得為空")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,12}$", message = "密碼需由英文及數字組成，並且至少包含一個大寫字母、一個小寫字母，長度為8~12個字元。")
-    @Column(name = "BAPASSWORD")
+    @Pattern(regexp = "^(?:(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,12}|\\$2[aby]\\$.{56})$", message = "密碼需由英文及數字組成，並且至少包含一個大寫字母、一個小寫字母，長度為8~12個字元。")
+    @Column(name = "BAPASSWORD", length = 72)
     private String bapassword;
     @NotBlank(message = "名字不可為空")
     @Column(name = "BANAME")

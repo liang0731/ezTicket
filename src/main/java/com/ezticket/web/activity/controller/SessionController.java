@@ -21,7 +21,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/Session")
 public class SessionController {

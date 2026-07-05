@@ -9,6 +9,7 @@ import com.ezticket.web.users.repository.FunctionRepository;
 import com.ezticket.web.users.repository.RoleRepository;
 import com.ezticket.web.users.repository.RoleauthorityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -29,6 +30,9 @@ public class BackuserService {
 
     @Autowired
     private FunctionRepository functionRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder bcryptPasswordEncoder;
 
     //拿取所有後台成員的資料,過濾只要DTO的內容
     public List<BackuserDTO> getAllBackuser() {
@@ -81,11 +85,12 @@ public class BackuserService {
     //驗證資料庫有無此後台成員,回傳布林值
     public boolean authenticate(String baaccount, String bapassword) {
         Backuser backuser = backuserRepository.findByBaaccount(baaccount);
-        if (backuser != null && backuser.getBapassword().equals(bapassword) && backuser.getBastatus() == 1) {
-            return true;
-        } else {
+        if (backuser == null) {
+            // 帳號不存在也跑一次雜湊比對，避免以回應時間差列舉有效帳號
+            bcryptPasswordEncoder.matches(bapassword != null ? bapassword : "", TIMING_DUMMY_HASH);
             return false;
         }
+        return passwordMatchesAndUpgrade(backuser, bapassword) && backuser.getBastatus() == 1;
     }
 
     //取得單一後台成員的所有基本資料 //未寫完
@@ -167,9 +172,10 @@ public class BackuserService {
         if(backuser.isPresent()){
             String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,12}$";
             Backuser updateTheBackuser = backuser.get();
+            boolean oldPasswordMatches = passwordMatchesAndUpgrade(updateTheBackuser, oldPassword);
             //舊密碼與輸入的舊密碼相同 && 新密碼與確認密碼相同 && 新密碼符合正規表式
-            if(updateTheBackuser.getBapassword().equals(oldPassword) && newPassword.equals(confirmPassword)&& newPassword.matches(passwordRegex)){
-                updateTheBackuser.setBapassword(newPassword);
+            if(oldPasswordMatches && newPassword.equals(confirmPassword)&& newPassword.matches(passwordRegex)){
+                updateTheBackuser.setBapassword(bcryptPasswordEncoder.encode(newPassword));
                 backuserRepository.save(updateTheBackuser);
                 System.out.println("確認密碼完成存入新密碼!");
                 resultMap.put("success","更改成功");
@@ -181,7 +187,7 @@ public class BackuserService {
                 System.out.println("新密碼格式不符合規定!");
             }
             //舊密碼與輸入的舊密碼不相同
-            if (!updateTheBackuser.getBapassword().equals(oldPassword)) {
+            if (!oldPasswordMatches) {
                 resultMap.put("oPwdError", "請確認您的舊密碼!");
                 System.out.println("輸入的舊密碼與真正的舊密碼不同!");
             }
@@ -217,7 +223,7 @@ public class BackuserService {
         Optional<Backuser> backuser = Optional.ofNullable(backuserRepository.findByBaemail(email));
         if(backuser.isPresent()){
             Backuser updateTheBackuser = backuser.get();
-            updateTheBackuser.setBapassword(password);
+            updateTheBackuser.setBapassword(bcryptPasswordEncoder.encode(password));
             System.out.println("密碼已修改完成!");
             return  backuserRepository.save(updateTheBackuser);
         }else {
@@ -226,5 +232,34 @@ public class BackuserService {
         }
     }
 
+    public Backuser createBackuser(Backuser backuser) {
+        backuser.setBapassword(bcryptPasswordEncoder.encode(backuser.getBapassword()));
+        return backuserRepository.save(backuser);
+    }
+
+    private static final String TIMING_DUMMY_HASH =
+            new BCryptPasswordEncoder().encode("ezticket-timing-dummy");
+
+    private boolean passwordMatchesAndUpgrade(Backuser backuser, String rawPassword) {
+        String storedPassword = backuser.getBapassword();
+        if (storedPassword == null || rawPassword == null) {
+            return false;
+        }
+        if (isBcryptPassword(storedPassword)) {
+            return bcryptPasswordEncoder.matches(rawPassword, storedPassword);
+        }
+        if (storedPassword.equals(rawPassword)) {
+            backuser.setBapassword(bcryptPasswordEncoder.encode(rawPassword));
+            backuserRepository.save(backuser);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isBcryptPassword(String storedPassword) {
+        return storedPassword.startsWith("$2a$")
+                || storedPassword.startsWith("$2b$")
+                || storedPassword.startsWith("$2y$");
+    }
 
 }

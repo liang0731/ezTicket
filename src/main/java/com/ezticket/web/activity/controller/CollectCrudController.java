@@ -22,7 +22,6 @@ public class CollectCrudController {
 
     //    驗票
     //    回傳代碼：-1 無票券；-2 已使用；-3 票券狀態異常；1 驗票成功
-    @CrossOrigin(origins = "*")
     @GetMapping("/checkin/{collectno}/{salt}")
     public String checkin(@PathVariable("collectno") Integer collectno, @PathVariable("salt") String salt) {
         int statusCode = collectCrudService.useTicket(collectno, salt);

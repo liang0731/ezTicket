@@ -6,6 +6,7 @@ import com.ezticket.web.users.dto.MemberImgDTO;
 import com.ezticket.web.users.pojo.Member;
 import com.ezticket.web.users.repository.MemberRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -19,6 +20,9 @@ import java.util.stream.Collectors;
 public class MemberService {
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private BCryptPasswordEncoder bcryptPasswordEncoder;
 
 
     //拿取所有會員的資料,過濾只要memberDTO的內容
@@ -76,11 +80,12 @@ public class MemberService {
     //驗證資料庫有無此會員,回傳布林值
     public boolean authenticate(String memail, String mpassword) {
         Member member = memberRepository.findByMemail(memail);
-        if (member != null && member.getMpassword().equals(mpassword) && member.getMemberstatus() == 1) {
-            return true;
-        } else {
+        if (member == null) {
+            // 帳號不存在也跑一次雜湊比對，避免以回應時間差列舉有效帳號
+            bcryptPasswordEncoder.matches(mpassword != null ? mpassword : "", TIMING_DUMMY_HASH);
             return false;
         }
+        return passwordMatchesAndUpgrade(member, mpassword) && member.getMemberstatus() == 1;
     }
 
     //取得單一會員的所有基本資料
@@ -109,9 +114,10 @@ public class MemberService {
         if(member.isPresent()){
             String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,12}$";
             Member updateTheMember = member.get();
+            boolean oldPasswordMatches = passwordMatchesAndUpgrade(updateTheMember, oldPassword);
             //舊密碼與輸入的舊密碼相同 && 新密碼與確認密碼相同 && 新密碼符合正規表式
-            if(updateTheMember.getMpassword().equals(oldPassword) && newPassword.equals(confirmPassword)&& newPassword.matches(passwordRegex)){
-                updateTheMember.setMpassword(newPassword);
+            if(oldPasswordMatches && newPassword.equals(confirmPassword)&& newPassword.matches(passwordRegex)){
+                updateTheMember.setMpassword(bcryptPasswordEncoder.encode(newPassword));
                 memberRepository.save(updateTheMember);
                 System.out.println("確認密碼完成存入新密碼!");
                 resultMap.put("success","更改成功");
@@ -123,7 +129,7 @@ public class MemberService {
                 System.out.println("新密碼格式不符合規定!");
             }
             //舊密碼與輸入的舊密碼不相同
-            if (!updateTheMember.getMpassword().equals(oldPassword)) {
+            if (!oldPasswordMatches) {
                 resultMap.put("oPwdError", "請確認您的舊密碼!");
                 System.out.println("輸入的舊密碼與真正的舊密碼不同!");
             }
@@ -205,7 +211,7 @@ public class MemberService {
         Optional<Member> oldMember = Optional.ofNullable(memberRepository.findByMemail(email));
         if(oldMember.isPresent()){
             Member updateTheMember = oldMember.get();
-            updateTheMember.setMpassword(password);
+            updateTheMember.setMpassword(bcryptPasswordEncoder.encode(password));
             return  memberRepository.save(updateTheMember);
         }else {
             throw new RuntimeException("Member not found with email: " + email);
@@ -219,11 +225,36 @@ public class MemberService {
         member.setAddress(memSignUpDTO.getAddress());
 //        member.setBirth(memSignUpDTO.getBirth());
         member.setMemail(memSignUpDTO.getMemail());
-        member.setMpassword(memSignUpDTO.getMpassword());
+        member.setMpassword(bcryptPasswordEncoder.encode(memSignUpDTO.getMpassword()));
         member.setMemberstatus(1);  //註冊直接啟用
         memberRepository.save(member);
         return member;
 
 
+    }
+
+    private static final String TIMING_DUMMY_HASH =
+            new BCryptPasswordEncoder().encode("ezticket-timing-dummy");
+
+    private boolean passwordMatchesAndUpgrade(Member member, String rawPassword) {
+        String storedPassword = member.getMpassword();
+        if (storedPassword == null || rawPassword == null) {
+            return false;
+        }
+        if (isBcryptPassword(storedPassword)) {
+            return bcryptPasswordEncoder.matches(rawPassword, storedPassword);
+        }
+        if (storedPassword.equals(rawPassword)) {
+            member.setMpassword(bcryptPasswordEncoder.encode(rawPassword));
+            memberRepository.save(member);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isBcryptPassword(String storedPassword) {
+        return storedPassword.startsWith("$2a$")
+                || storedPassword.startsWith("$2b$")
+                || storedPassword.startsWith("$2y$");
     }
 }

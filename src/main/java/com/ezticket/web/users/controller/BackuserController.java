@@ -29,6 +29,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/backuser")
 public class BackuserController {
+    private static final String PASSWORD_REGEX = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,12}$";
+
     @Autowired
     private BackuserService backuserService;
     @Autowired
@@ -79,7 +81,8 @@ public class BackuserController {
     public ResponseEntity<?> createBackuser(@Valid @RequestBody Backuser newbackuser, BindingResult bindingResult){
         System.out.println("前台要求新增後台使用者資料:" + newbackuser.toString());
         Backuser backuser = backuserRepository.findByBaemail(newbackuser.getBaemail());
-        if (bindingResult.hasErrors() || backuser != null) {
+        boolean passwordFormatError = newbackuser.getBapassword() == null || !newbackuser.getBapassword().matches(PASSWORD_REGEX);
+        if (bindingResult.hasErrors() || backuser != null || passwordFormatError) {
             System.out.println("新增的資料格式有誤需調整");
             Map<String, String> errors = new HashMap<>();
             bindingResult.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
@@ -88,10 +91,13 @@ public class BackuserController {
                 errors.put("baemail","此Email已註冊!");
                 System.out.println("此Email已註冊過!");
             }
+            if(passwordFormatError){
+                errors.put("bapassword","密碼需由英文及數字組成，並且至少包含一個大寫字母、一個小寫字母，長度為8~12個字元。");
+            }
             return ResponseEntity.badRequest().body(errors);
         } else {
             System.out.println("新增成功");
-            newbackuser = backuserRepository.save(newbackuser);
+            newbackuser = backuserService.createBackuser(newbackuser);
             return  ResponseEntity.ok(newbackuser);
         }
     }

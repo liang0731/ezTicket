@@ -13,7 +13,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.*;
 
-@CrossOrigin("*")
 @RestController
 @RequestMapping("/Aimgt")
 public class AimgtController {
