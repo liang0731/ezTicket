@@ -5,6 +5,11 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      reset_db:
+        description: 'DANGER: type "yes" to wipe the MySQL volume and rerun db/init.sql (deletes ALL data)'
+        required: false
+        default: 'no'
 
 jobs:
   deploy:
@@ -29,7 +34,28 @@ jobs:
         run: |
           rsync -avz -vvv --progress -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:/var/services/homes/github-runner/ezticket
 
-      - name: Remote deploy
+      - name: Remote deploy (preserve data)
+        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.reset_db != 'yes' }}
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o ServerAliveInterval=30 -o ServerAliveCountMax=20 ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
+            cd /var/services/homes/github-runner/ezticket
+            docker compose up --build -d
+            echo "Waiting for app HTTP endpoint..."
+            for i in $(seq 1 60); do
+              if curl --connect-timeout 2 --max-time 5 -fsS -I http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
+                echo "App is responding."
+                exit 0
+              fi
+              sleep 5
+            done
+            echo "App did not respond within 300 seconds. Diagnostics:"
+            docker compose ps -a
+            docker compose logs --tail=80 app || true
+            exit 1
+          EOF
+
+      - name: Remote clean deploy (RESET DB - deletes all data)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.reset_db == 'yes' }}
         run: |
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o ServerAliveInterval=30 -o ServerAliveCountMax=20 ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
             cd /var/services/homes/github-runner/ezticket
