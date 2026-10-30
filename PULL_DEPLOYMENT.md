@@ -1,42 +1,38 @@
-# NAS 主動拉取部署草稿（尚未套用）
+# ezTicket NAS 主動拉取部署
 
-GitHub 只建置並發布 GHCR app 映像；NAS 排程主動拉取。舊 SSH／rsync 部署由新的 image workflow 取代，不需要對 NAS 開放公網 SSH。映像內不得放 NAS `.env`、私鑰或 Docker registry 憑證。
+已於 2026-10-30 完成切換。GitHub 只建置並發布 GHCR app 映像，不再使用 SSH／rsync 連入 NAS。
 
-## 保留現有服務
+## 日常使用
 
-- `.env` 留在 `/var/services/homes/github-runner/ezticket`，不從 GitHub Secrets 覆寫。
-- 使用原有 Compose project 名稱，禁止另建同名容器或新 MySQL volume。
-- app 仍透過 `mysql:3306`、`redis:6379` 連線；發布埠 3307、6380、8086 維持原狀。
-- 排程只執行 `up -d --no-deps app`。不執行 `down`、`down -v`、清除 volume、SQL 初始化或重建資料庫。
-- 映像相同不重建；更新失敗嘗試回復原 app 映像。這不會回復應用程式已經寫入或遷移的資料庫內容。
-- 不更改其他 NAS 專案、Photos、Drive、反向代理。
+推送 `main` 後，等待 GitHub「Build NAS image (no inbound deployment)」成功。NAS 的獨立排程每天 04:20（Asia/Taipei）拉取 `ghcr.io/liang0731/ezticket:auto-deploy`。本次建立的 DSM 任務名稱為 `Task 12`，已啟用；其他 NAS 專案的 04:00 排程維持原狀。
 
-## 切換前必做
+排程先驗證三個部署檔的 SHA-256，再執行 `scripts/nas-scheduled-update.py`。因此手動更改部署腳本或 Compose 後，必須先審查變更並更新 DSM 中的對應雜湊；單純發布新版 app 映像不需修改排程。
 
-1. 用管理權限確認現有 app 的 `com.docker.compose.project` 與 working directory；目前一般 SSH 帳號無 Docker socket 權限，尚未完成這項確認。
-2. 確認資料庫有可用備份，並記錄現有 app image ID、MySQL volume、三個容器的身分與啟動時間。
-3. 發布 image workflow，確認 CI build 與映像發布成功。若 GHCR 套件為 private，沿用 NAS 的 registry 登入方式或建立最小唯讀憑證；不把憑證寫進腳本。
-4. 將已審查的 `docker-compose.pull.yml` 與腳本放進原部署目錄；先執行 Compose config 的靜態驗證，避免輸出機密。
-5. 先人工執行一次，再安排 NAS 排程。建議獨立的 ezTicket 任務，不修改既有 04:00 的其他專案排程；待驗證後才決定是否整併。
+## 資料與更新範圍
 
-排程命令範本（PROJECT_LABEL 必須以實際查到的值取代）：
+- 原部署目錄、NAS `.env`、Compose project `ezticket` 均保留。
+- app 透過 Docker 內部 `mysql:3306`、`redis:6379` 連線。發布埠 3307、6380、8086 未改。
+- 有新映像時，先以 MySQL single-transaction dump 備份 ezTicket 資料庫，再只執行 `up -d --no-deps app`。
+- 不停止或重建 MySQL／Redis，不執行 `down`、`down -v`、SQL 初始化或移除資料卷。
+- 映像相同不重建。app 健康檢查失敗時嘗試回復舊 app 映像；這不會回復 app 已寫入或遷移的資料庫內容。
+- 比對更新前後所有其他容器的 ID、映像、啟動時間與命名資料卷，異常時回報失敗。
+- 資料庫 dump 與部署日誌保存在原部署目錄的 `.deploy-state/`，權限受限；不要提交 Git。它是同 NAS 備份，不等於獨立或異地備份。後續應依容量安排備份保留政策。
 
-```sh
-cd /var/services/homes/github-runner/ezticket
-export EZTICKET_COMPOSE_PROJECT='PROJECT_LABEL'
-bash scripts/nas-pull-deploy.sh >> .deploy-state/deploy.log 2>&1
-```
+## 已完成的驗證
 
-先建立 `.deploy-state` 並限制權限，另加日誌輪替。不要直接複製未填寫的範本啟用排程。
+- 五項離線測試通過：無變更、只更新 app、拉取失敗不動容器、健康失敗回復、project 不符停止。
+- GitHub 建置成功，映像版本來源：`99b4d887265c0761f625c2fa1bbf8dfd42943ae0`。
+- 首次 NAS 執行回報 `updated`，建立 25,840,605 bytes 的 SQL dump，app HTTP 檢查通過。
+- MySQL／Redis 的容器 ID、啟動時間與資料卷未變；其他八個容器未變。
+- 第二次執行回報 `unchanged`，app 容器 ID 未變，HTTP 檢查通過。
+- 每日 04:20 排程已儲存並重新讀取確認。未把未來的排程觸發或完整業務操作測試視為已驗證。
 
-## 驗證與復原
+## 操作與復原
 
-- 網站首頁 HTTP 通過只代表基本可達；仍需本人測試登入與重要操作。
-- 核對 MySQL／Redis 容器 ID 與啟動時間不變，既有資料仍可讀。
-- 再執行一次應顯示 unchanged，app 不被重建。
-- 切換前的本機 build 部署檔保留；若回復，使用原目錄、原 project，不執行 `down -v`。
-- 五個離線 stub 測試已涵蓋 unchanged、app-only update、拉取失敗、健康失敗回復及 project 不符。尚未做真實 Docker build、GHCR 發布或 NAS 部署。
+需要人工執行時，從 DSM 選取上述獨立任務執行。不要直接使用舊 SSH 部署指令或 `nas-clean-deploy.sh`；後者會刪除資料庫 volume。
 
-## 完全關閉公網的額外限制
+部署結果報告的實際位置記錄於 DSM 任務命令；報告不包含環境變數或密碼。詳細日誌為 `.deploy-state/scheduler.log`，失敗時先檢查報告與日誌，不要重置資料庫。
 
-程式碼存在綠界付款回呼 `/ecpay/return`、`/ecpay/Treturn`。若仍使用付款流程，完全關閉公網後外部支付系統無法直接回呼；必須先確認這些功能是否仍需要。此草稿不替它們開放例外入口。
+原有本機建置的 `docker-compose.yml` 保留供人工維護與復原。使用時必須保留原 project 及資料卷，不執行 `down -v`。
+
+程式碼仍有綠界付款回呼 `/ecpay/return`、`/ecpay/Treturn`；私人網路部署不代表外部支付系統可以回呼。此切換未替付款功能新增公網入口。
