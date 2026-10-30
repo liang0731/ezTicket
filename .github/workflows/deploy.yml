@@ -1,63 +1,41 @@
-name: Deploy to NAS Docker
-
+name: Build NAS image (no inbound deployment)
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+  pull_request:
   workflow_dispatch:
-    inputs:
-      reset_db:
-        description: 'DANGER: type "yes" to wipe the MySQL volume and rerun db/init.sql (deletes ALL data)'
-        required: false
-        default: 'no'
-
+permissions:
+  contents: read
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
-  deploy:
+  image:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      packages: write
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v3
-
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.NAS_PORT }} -H ${{ secrets.NAS_HOST }} >> ~/.ssh/known_hosts
-
-      - name: Create .env from secret
-        run: |
-          echo "${{ secrets.ENV_FILE_CONTENTS }}" > .env
-
-      - name: Upload project to NAS
-        run: |
-          rsync -avz -vvv --progress -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o StrictHostKeyChecking=no" ./ ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }}:/var/services/homes/github-runner/ezticket
-
-      - name: Remote deploy (preserve data)
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.reset_db != 'yes' }}
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o ServerAliveInterval=30 -o ServerAliveCountMax=20 ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
-            cd /var/services/homes/github-runner/ezticket
-            docker compose up --build -d
-            echo "Waiting for app HTTP endpoint..."
-            for i in $(seq 1 60); do
-              if curl --connect-timeout 2 --max-time 5 -fsS -I http://127.0.0.1:8086/index.html >/dev/null 2>&1; then
-                echo "App is responding."
-                exit 0
-              fi
-              sleep 5
-            done
-            echo "App did not respond within 300 seconds. Diagnostics:"
-            docker compose ps -a
-            docker compose logs --tail=80 app || true
-            exit 1
-          EOF
-
-      - name: Remote clean deploy (RESET DB - deletes all data)
-        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.reset_db == 'yes' }}
-        run: |
-          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.NAS_PORT }} -o ServerAliveInterval=30 -o ServerAliveCountMax=20 ${{ secrets.NAS_USER }}@${{ secrets.NAS_HOST }} << 'EOF'
-            cd /var/services/homes/github-runner/ezticket
-            CONFIRM_RESET_DB=yes sh scripts/nas-clean-deploy.sh
-          EOF
+      - uses: actions/checkout@v4
+      - name: Check isolated app update and rollback
+        run: python3 scripts/test_pull_deploy.py
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          tags: |
+            ghcr.io/liang0731/ezticket:sha-${{ github.sha }}
+            ghcr.io/liang0731/ezticket:auto-deploy
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=https://github.com/liang0731/ezTicket
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

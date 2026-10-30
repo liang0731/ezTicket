@@ -1,0 +1,72 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ezticket-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3307:${MYSQL_PORT}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d
+    networks:
+      - mynetwork
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$${MYSQL_ROOT_PASSWORD}\" || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 30
+      start_period: 300s
+
+  redis:
+    image: redis:6.2
+    container_name: ezticket-redis
+    restart: unless-stopped
+    ports:
+      - "6380:${REDIS_PORT}"
+    networks:
+      - mynetwork
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    image: ${EZTICKET_IMAGE:?Set by scripts/nas-pull-deploy.sh}
+    container_name: ezticket-app
+    restart: unless-stopped
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "8086:${SERVER_PORT}"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      SERVER_PORT: ${SERVER_PORT}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASE: ${REDIS_DATABASE}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      ECPAY_RETURN_URL: ${ECPAY_RETURN_URL}
+    networks:
+      - mynetwork
+
+volumes:
+  mysql_data:
+
+networks:
+  mynetwork:
+    driver: bridge

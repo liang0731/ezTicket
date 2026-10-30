@@ -34,6 +34,8 @@ build/
 
 # 防止機密檔被 commit
 .env
+.deploy-state/
+**/graphify-out/
 
 ### Spring Boot ###
 application.properties
