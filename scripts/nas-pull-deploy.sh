@@ -22,8 +22,12 @@ for dependency in ezticket-mysql ezticket-redis; do
   }
 done
 previous=$("$DOCKER" inspect --format '{{.Image}}' ezticket-app)
-"$DOCKER" pull "$CHANNEL"
-candidate=$("$DOCKER" image inspect --format '{{.Id}}' "$CHANNEL")
+if [[ -n "${EZTICKET_TARGET_IMAGE_ID:-}" ]]; then
+  candidate=$("$DOCKER" image inspect --format '{{.Id}}' "$EZTICKET_TARGET_IMAGE_ID")
+else
+  "$DOCKER" pull "$CHANNEL"
+  candidate=$("$DOCKER" image inspect --format '{{.Id}}' "$CHANNEL")
+fi
 [[ "$candidate" =~ ^sha256:[0-9a-f]{64}$ && "$previous" =~ ^sha256:[0-9a-f]{64}$ ]] || {
   echo 'Invalid image identity.' >&2; exit 1;
 }
